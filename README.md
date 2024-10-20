@@ -4,7 +4,7 @@ This is a Flask-based web application that recommends music based on a given son
 
 ## Features
 
-- **Song Recommendations**: Based on a song input, it suggests 5 similar songs(Specifically made for Holluwood songs).
+- **Song Recommendations**: Based on a song input, it suggests 5 similar songs(Specifically made for Hollywood songs).
 - **Auto-complete Suggestions**: While typing a song name, the system provides auto-suggestions.
 - **Simple User Interface**: A clean and intuitive web page where users can search for songs and get recommendations.
   
