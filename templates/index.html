@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Recommendation System</title>
+    <!-- Link the CSS file -->
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Music Recommendation System</h1>
+        <form id="searchForm" class="form-container">
+            <label for="song_name">Search by Song Name or Genre:</label>
+            <input type="text" id="song_name" name="song_name" placeholder="Enter a song, artist, or genre" required autocomplete="off">
+            <div id="suggestions" style="border: 1px solid #ccc; display: none; position: absolute; z-index: 1000;"></div> <!-- Suggestions div -->
+            <button type="submit">Get Recommendations</button>
+        </form>
+
+        <h2>Recommendations:</h2>
+        <ul id="recommendations" class="recommendations-list"></ul>
+    </div>
+
+    <script>
+        // Function to fetch song suggestions from the backend
+        async function fetchSuggestions(query) {
+            try {
+                const response = await fetch(`/get-songs?query=${encodeURIComponent(query)}`);
+                return await response.json();
+            } catch (error) {
+                console.error('Error fetching suggestions:', error);
+                return [];
+            }
+        }
+
+        // Handle input and display suggestions
+        document.getElementById('song_name').addEventListener('input', async function() {
+            const query = this.value;
+            const suggestionsDiv = document.getElementById('suggestions');
+            suggestionsDiv.innerHTML = '';  // Clear previous suggestions
+
+            if (query.length > 0) {
+                const suggestions = await fetchSuggestions(query);
+
+                if (suggestions.length > 0) {
+                    suggestionsDiv.style.display = 'block';
+                    suggestions.forEach(song => {
+                        const listItem = document.createElement('div');
+                        listItem.textContent = song;
+                        listItem.style.padding = '8px'; // Add some padding for better visibility
+                        listItem.style.cursor = 'pointer'; // Change cursor to pointer
+                        listItem.onclick = () => {
+                            document.getElementById('song_name').value = song; // Update input with the selected song
+                            suggestionsDiv.style.display = 'none'; // Hide suggestions
+                        };
+                        suggestionsDiv.appendChild(listItem);
+                    });
+                } else {
+                    suggestionsDiv.style.display = 'none';  // Hide suggestions if no matches
+                }
+            } else {
+                suggestionsDiv.style.display = 'none';  // Hide suggestions if query is empty
+            }
+        });
+
+        // Handle form submission and display recommendations
+        document.getElementById('searchForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const song_name = document.getElementById('song_name').value;
+            fetch('/recommend', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'song_name=' + encodeURIComponent(song_name)
+            })
+            .then(response => response.json())
+            .then(data => {
+                const recommendationsList = document.getElementById('recommendations');
+                recommendationsList.innerHTML = '';  // Clear previous recommendations
+
+                if (data.error) {
+                    recommendationsList.innerHTML = '<li>' + data.error + '</li>';
+                } else {
+                    data.recommendations.forEach(function (song) {
+                        const listItem = document.createElement('li');
+                        listItem.textContent = song;
+                        recommendationsList.appendChild(listItem);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                const recommendationsList = document.getElementById('recommendations');
+                recommendationsList.innerHTML = '<li>Error loading recommendations</li>';
+            });
+        });
+    </script>
+</body>
+</html>
